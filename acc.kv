@@ -1,0 +1,32 @@
+AccManager:
+    MainWindow:
+    AnalysisWindow:
+
+<MainWindow>:
+    name: "Main"
+    GridLayout:
+        cols: 1
+        Button:
+            text: 'Import Excel data'
+            on_press: root.manager.open_file()
+        Button:
+            text: 'Data analysis'
+            on_release:
+                app.root.current='Analysis'
+                root.manager.transition.direction='left'
+<AnalysisWindow>:
+    name: "Analysis"
+    GridLayout:
+        cols: 1
+        Button:
+            size_hint:1,0.05
+            text: "Go back"
+            on_release:
+                app.root.current='Main'
+                root.manager.transition.direction='right'
+        Button:
+            size_hint:1,0.9
+            text: "Show bar"
+            on_release: root.manager.show_bar()
+
+# https://kivy.org/doc/stable/api-kivy.uix.filechooser.html?highlight=file#module-kivy.uix.filechooser
