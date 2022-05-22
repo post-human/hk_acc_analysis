@@ -11,9 +11,14 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.screenmanager import Screen, ScreenManager
+from pyecharts import options
+from pyecharts.charts import Bar, Page
 from xlrd import xldate_as_datetime
 
+# global config
 SUBJECT_CODE_PATTERN = "^\\d{7}$"
+LABEL_OPT = options.LabelOpts(rotate=90, position='middle')
+MONTHS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
 
 
 def init_log(log_file):
@@ -90,8 +95,7 @@ def save_data(path, filename):
                 period_val[0] = period_val[0] + debit
 
     subject_codes = list(subject_dict.keys())
-    conn = sqlite3.connect('hk.db')
-    conn.set_trace_callback(print)
+    conn = get_conn()
     # * check subject_code, insert if not exist, get sid
     with conn:
         cursor = conn.execute(
@@ -129,6 +133,17 @@ def save_data(path, filename):
         print(subject_id_dict)
 
 
+def get_conn():
+    conn = sqlite3.connect('hk.db')
+    conn.set_trace_callback(print)
+    return conn
+
+
+def execute_query(query_sql, conn, param):
+    cursor = conn.execute(query_sql, param)
+    return cursor.fetchall()
+
+
 class AccManager(ScreenManager):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -156,7 +171,53 @@ class AccManager(ScreenManager):
         logging.info("selected: %s" % filename[0])
 
     def show_bar(self):
-        pass
+        selected_acc_id = 1
+        selected_subject = [2010332, 2010335]
+        amount_select_sql = "select hsam.sid,hs.code,hs.name,hsam.period,hsam.debit,hsam.credit " \
+                            "from hk_subject_actual_mount hsam inner join hk_subject hs " \
+                            "on hsam.sid = hs.sid where hs.code >= ? and hs.code <= ? and hs.acc_id = ? " \
+                            "order by hs.code"
+        conn = get_conn()
+        results = execute_query(amount_select_sql, conn, [selected_subject[0], selected_subject[1], selected_acc_id])
+        amounts_dict = {}  # {subjectCode:{name:'',year:{‘all':[eachMonth],'debit':[eachMonth],'credit':[eachMonth]}}}
+        for result in results:
+            # {name:'',year:{‘all':[eachMonth],'debit':[eachMonth],'credit':[eachMonth]}}
+            data4years = amounts_dict.setdefault(result[1], {'name': result[2]})
+            year = result[3][:4]
+            period_index = int(result[3][4:]) - 1
+            split_dict = data4years.setdefault(year, {
+                'all': [None, None, None, None, None, None, None, None, None, None, None, None],
+                'debit': [None, None, None, None, None, None, None, None, None, None, None, None],
+                'credit': [None, None, None, None, None, None, None, None, None, None, None, None]})
+            split_dict['all'][period_index] = result[4] - result[5]
+            split_dict['debit'][period_index] = result[4]
+            split_dict['credit'][period_index] = result[5]
+        # generate chart
+        page = Page()
+        for code, v in amounts_dict.items():
+            subject_name = v['name']
+            del v['name']
+            # total chart
+            bar_total = Bar().set_global_opts(
+                title_opts=options.TitleOpts(title=code, subtitle=subject_name + '_发生额合计'))
+            bar_total.add_xaxis(MONTHS)
+            for year, item in v.items():
+                bar_total.add_yaxis(year, item['all'], label_opts=LABEL_OPT)
+            # debit chart
+            bar_debit = Bar().set_global_opts(title_opts=options.TitleOpts(title=code, subtitle=subject_name + '_借方发生'))
+            bar_debit.add_xaxis(MONTHS)
+            for year, item in v.items():
+                bar_debit.add_yaxis(year, item['debit'], label_opts=LABEL_OPT)
+            # credit chart
+            bar_credit = Bar().set_global_opts(
+                title_opts=options.TitleOpts(title=code, subtitle=subject_name + '_贷方发生'))
+            bar_credit.add_xaxis(MONTHS)
+            for year, item in v.items():
+                bar_credit.add_yaxis(year, item['credit'], label_opts=LABEL_OPT)
+            page.add(bar_total, bar_debit, bar_credit)
+        # render 会生成本地 HTML 文件，默认会在当前目录生成 render.html 文件
+        # 也可以传入路径参数，如 bar.render("mycharts.html")
+        page.render(datetime.datetime.today().strftime('%Y%m%d'))
 
 
 kv = Builder.load_file('acc.kv')
