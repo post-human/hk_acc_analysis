@@ -8,6 +8,7 @@ import webbrowser
 from pathlib import Path
 from sqlite3 import Connection
 
+import win32timezone
 import xlrd
 from kivy.app import App
 from kivy.uix.button import Button
@@ -22,6 +23,7 @@ from pyecharts import options
 from pyecharts.charts import Page, Bar
 from xlrd import xldate_as_datetime
 
+print(win32timezone.now())
 SUBJECT_CODE_PATTERN = "^\\d{7}$"
 LABEL_OPT = options.LabelOpts(rotate=90, position='middle')
 MONTHS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
@@ -346,4 +348,8 @@ class HkApp(App):
 
 if __name__ == '__main__':
     HkApp().run()
-# pyinstaller -F -w acc.py
+
+# pyinstaller --add-data="D:\PycharmProjects\work\venv\Lib\site-packages\pyecharts;pyecharts" -F acc.py
+
+# pyinstaller acc.spec
+# todo check exe generate
