@@ -40,7 +40,7 @@ exe = EXE(
 )
 coll = COLLECT(
     exe,
-    Tree('D:\\PycharmProjects\\work\\hk_acc_analysis'),
+#    Tree('D:\\PycharmProjects\\work\\hk_acc_analysis'),
     a.binaries,
     a.zipfiles,
     a.datas,

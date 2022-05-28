@@ -23,6 +23,7 @@ from pyecharts import options
 from pyecharts.charts import Page, Bar
 from xlrd import xldate_as_datetime
 
+os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 print(win32timezone.now())
 SUBJECT_CODE_PATTERN = "^\\d{7}$"
 LABEL_OPT = options.LabelOpts(rotate=90, position='middle')
