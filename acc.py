@@ -79,12 +79,16 @@ def save_data(path, filename):
         if 'str' == typeof(row_cell_0):
             if len(row_cell_0) == 0:
                 continue
+            row_cell_1 = table.cell_value(row_num, 1)
             if row_num == 0:
-                acc_id = int(table.cell_value(row_num, 1))
+                if len(row_cell_1) == 0:
+                    logging.error('acc_id lost')
+                    return
+                acc_id = int(row_cell_1)
                 continue
             if re.match(SUBJECT_CODE_PATTERN, row_cell_0):
                 curr_subject = row_cell_0
-                subject_dict[curr_subject] = table.cell_value(row_num, 1)
+                subject_dict[curr_subject] = row_cell_1
                 data_dict[curr_subject] = {}  # key:month value:[debit,credit]
         else:
             period = xldate_as_datetime(row_cell_0, 0).strftime('%Y%m')
@@ -331,7 +335,7 @@ class AnalysisWindow(Screen):
                 bar_credit.add_yaxis(year, item['credit'], label_opts=LABEL_OPT)
             page.add(bar_total, bar_debit, bar_credit)
         # render 会生成本地 HTML 文件，默认会在当前目录生成 render.html 文件
-        html = datetime.datetime.today().strftime('%Y%m%d') + '.html'
+        html = datetime.datetime.today().strftime('%Y%m%d') + str(selected_acc_id) + str(selected_subject) + '.html'
         page.render(html)
         webbrowser.open(html)
 
