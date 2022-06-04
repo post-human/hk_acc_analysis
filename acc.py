@@ -11,6 +11,7 @@ from sqlite3 import Connection
 import win32timezone
 import xlrd
 from kivy.app import App
+from kivy.core.text import LabelBase
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.uix.filechooser import FileChooserListView
@@ -19,10 +20,12 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen, ScreenManager
 from pyecharts import options
-# global config
 from pyecharts.charts import Page, Bar
 from xlrd import xldate_as_datetime
 
+LabelBase.register(name='msyh', fn_regular='./msyh.ttf')
+
+# global config
 os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 print(win32timezone.now())
 SUBJECT_CODE_PATTERN = "^\\d{7}$"
@@ -169,8 +172,10 @@ def execute_query(query_sql, conn, param=[]):
     return cursor.fetchall()
 
 
+# set button text
 def set_btn(button, obj, attr, x):
     setattr(button, 'text', x)
+    setattr(button, 'font_name', 'msyh')
     obj[attr] = int(x.split(':')[0])
 
 
@@ -182,6 +187,15 @@ def switch_window(name, direction=None):
     acc_manager.current = name
     if direction is not None:
         acc_manager.transition.direction = direction
+
+
+def fill_dropdown(selects, button, dropdown):
+    for each in selects:
+        btn = Button(text='%s: %s' % (each[0], each[1]), size_hint_y=None, height=18, font_name='msyh')
+        btn.bind(on_release=lambda btn: dropdown.select(btn.text))
+        # add the button inside the dropdown
+        dropdown.add_widget(btn)
+    dropdown.open(button)
 
 
 class MainWindow(Screen):
@@ -246,13 +260,7 @@ class AnalysisWindow(Screen):
     def show_account_dropdown(self, button):
         dropdown = DropDown()
         dropdown.bind(on_select=lambda instance, x: self.set_account(self, button, x))
-
-        for result in self.accounts:
-            btn = Button(text='%s: %s' % (result[0], result[1]), size_hint_y=None, height=15)
-            btn.bind(on_release=lambda btn: dropdown.select(btn.text))
-            # add the button inside the dropdown
-            dropdown.add_widget(btn)
-        dropdown.open(button)
+        fill_dropdown(self.accounts, button, dropdown)
 
     # get subjects when change account
     @staticmethod
@@ -265,22 +273,12 @@ class AnalysisWindow(Screen):
     def show_pre_subject_dropdown(self, button):
         dropdown = DropDown()
         dropdown.bind(on_select=lambda instance, x: set_btn(button, acc_params, 'pre_subject_id', x))
-        for result in self.subjects:
-            btn = Button(text='%s: %s' % (result[0], result[1]), size_hint_y=None, height=15)
-            btn.bind(on_release=lambda btn: dropdown.select(btn.text))
-            # add the button inside the dropdown
-            dropdown.add_widget(btn)
-        dropdown.open(button)
+        fill_dropdown(self.subjects, button, dropdown)
 
     def show_suf_subject_dropdown(self, button):
         dropdown = DropDown()
         dropdown.bind(on_select=lambda instance, x: set_btn(button, acc_params, 'suf_subject_id', x))
-        for result in self.subjects:
-            btn = Button(text='%s: %s' % (result[0], result[1]), size_hint_y=None, height=15)
-            btn.bind(on_release=lambda btn: dropdown.select(btn.text))
-            # add the button inside the dropdown
-            dropdown.add_widget(btn)
-        dropdown.open(button)
+        fill_dropdown(self.subjects, button, dropdown)
 
     @staticmethod
     def show_chart():
