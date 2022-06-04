@@ -80,8 +80,9 @@ def save_data(path, filename):
             if len(row_cell_0) == 0:
                 continue
             row_cell_1 = table.cell_value(row_num, 1)
+            print(row_cell_1)
             if row_num == 0:
-                if len(row_cell_1) == 0:
+                if row_cell_1 is None or row_cell_1 == '':
                     logging.error('acc_id lost')
                     return
                 acc_id = int(row_cell_1)
@@ -357,4 +358,3 @@ if __name__ == '__main__':
 # pyinstaller --add-data="D:\PycharmProjects\work\venv\Lib\site-packages\pyecharts;pyecharts" -F acc.py
 
 # pyinstaller acc.spec
-# todo check exe generate
