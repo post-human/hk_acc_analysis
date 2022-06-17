@@ -28,7 +28,7 @@ LabelBase.register(name='msyh', fn_regular='./msyh.ttf')
 # global config
 os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 print(win32timezone.now())
-SUBJECT_CODE_PATTERN = "^\\d{7}$"
+SUBJECT_CODE_PATTERN = "^[0-9A-Za-z]{7}$"
 LABEL_OPT = options.LabelOpts(rotate=90, position='middle')
 MONTHS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
 
@@ -294,7 +294,7 @@ class AnalysisWindow(Screen):
         amount_select_sql = "select hsam.sid,hs.code,hs.name,hsam.period,hsam.debit,hsam.credit " \
                             "from hk_subject_actual_mount hsam inner join hk_subject hs " \
                             "on hsam.sid = hs.sid where hs.code >= ? and hs.code <= ? and hs.acc_id = ? " \
-                            "order by hs.code"
+                            "order by hs.code,hsam.period"
         conn = get_conn()
         results = execute_query(amount_select_sql, conn, [selected_subject[0], selected_subject[1], selected_acc_id])
         amounts_dict = {}  # {subjectCode:{name:'',year:{‘all':[eachMonth],'debit':[eachMonth],'credit':[eachMonth]}}}
