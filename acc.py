@@ -176,7 +176,7 @@ def execute_query(query_sql, conn, param=[]):
 def set_btn(button, obj, attr, x):
     setattr(button, 'text', x)
     setattr(button, 'font_name', 'msyh')
-    obj[attr] = int(x.split(':')[0])
+    obj[attr] = x.split(':')[0]
 
 
 acc_manager = ScreenManager()
